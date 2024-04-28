@@ -10,6 +10,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
@@ -25,6 +27,7 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
+import org.fcitx.fcitx5.android.BuildConfig
 import org.fcitx.fcitx5.android.R
 import org.fcitx.fcitx5.android.data.prefs.AppPrefs
 import org.fcitx.fcitx5.android.databinding.ActivityMainBinding
@@ -95,6 +98,7 @@ class MainActivity : AppCompatActivity() {
             processIntent(it)
         }
         checkNotificationPermission()
+        checkManageExternalStoragePermission()
     }
 
     private fun processIntent(intent: Intent?) {
@@ -230,6 +234,23 @@ class MainActivity : AppCompatActivity() {
         if (requestCode != 0) return
         // do not ask again if user denied the request
         needNotifications = grantResults.getOrNull(0) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun checkManageExternalStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (Environment.isExternalStorageManager()) {
+                return;
+            }
+
+            val uri = Uri.parse("package:${BuildConfig.APPLICATION_ID}")
+
+            startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                    uri
+                )
+            )
+        }
     }
 
     override fun onStop() {
